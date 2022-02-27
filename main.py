@@ -4,14 +4,20 @@ from data import db_session
 from data.users import User
 from data.jobs import Jobs
 from flask import Flask
-from flask import render_template
+from flask import render_template, redirect
+from forms.user import RegisterForm
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
 
 def main():
-    os.remove('db/mars_explorer.db')
+    try:
+        os.remove('db/mars_explorer.db')
+    except FileNotFoundError:
+        pass
+
     db_session.global_init("db/mars_explorer.db")
 
     user0 = User()
@@ -63,13 +69,14 @@ def main():
     db_sess.commit()
 
     job0 = Jobs(team_leader=1, job='deployment of residential modules 1 and 2', work_size=15,
-                collaborators='2, 3', start_date=datetime.date(2022, 1, 23), is_finished=False)
+                collaborators='2, 3', start_date=datetime.date(2022, 1, 23), is_finished=False,
+                end_date=datetime.date(2022, 1, 24))
     db_sess = db_session.create_session()
     db_sess.add(job0)
     db_sess.commit()
 
     job1 = Jobs(team_leader=4, job='building gym', work_size=10,
-                collaborators='4', start_date=datetime.date(2021, 1, 23), is_finished=True,
+                collaborators='4', start_date=datetime.date(2022, 2, 27), is_finished=True,
                 end_date=datetime.datetime.now())
     db_sess = db_session.create_session()
     db_sess.add(job1)
@@ -81,10 +88,6 @@ def main():
 @app.route("/")
 def index():
     db_sess = db_session.create_session()
-    param = {"jobs": [{"id": 1, "job": 'bebra', "team_leader": 'zhaba', "duration": '15 hours',
-                       "collaborators": '1, 4', "finished": True},
-                      {"id": 2, "job": 'bebra', "team_leader": 'zhaba', "duration": '15 hours',
-                       "collaborators": '1, 4', "finished": False}]}
     param = {"jobs": []}
     for el in db_sess.query(Jobs).all():
         job = {"id": el.id, "job": el.job,
@@ -100,6 +103,35 @@ def index():
         param["jobs"].append(job)
 
     return render_template("action.html", **param)
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def reqister():
+    form = RegisterForm()
+    if form.validate_on_submit():
+        if form.password.data != form.password_again.data:
+            return render_template('register.html', title='Регистрация',
+                                   form=form,
+                                   message="Пароли не совпадают")
+        db_sess = db_session.create_session()
+        if db_sess.query(User).filter(User.email == form.email.data).first():
+            return render_template('register.html', title='Регистрация',
+                                   form=form,
+                                   message="Такой пользователь уже есть")
+        user = User(
+            surname=form.surname.data,
+            name=form.name.data,
+            position=form.position.data,
+            speciality=form.speciality.data,
+            address=form.address.data,
+            email=form.email.data,
+            hashed_password=form.hashed_password.data,
+            modified_date=datetime.datetime.now()
+        )
+        db_sess.add(user)
+        db_sess.commit()
+        return redirect('/login')
+    return render_template('register.html', title='Регистрация', form=form)
 
 
 if __name__ == '__main__':
