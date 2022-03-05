@@ -22,6 +22,7 @@ login_manager.init_app(app)
 
 def main():
     f = False
+    a = False
     if f:
         try:
             os.remove('db/mars_explorer.db')
@@ -29,7 +30,7 @@ def main():
             pass
 
     db_session.global_init("db/mars_explorer.db")
-    if f:
+    if a:
         user0 = User()
         user0.surname = 'Scott'
         user0.name = 'Ridley'
@@ -103,8 +104,8 @@ def index():
         job = {"id": el.id, "job": el.job, "team_leader": db_sess.query(User).filter(
             User.id == el.team_leader).first().surname + ' ' + db_sess.query(User).filter(
             User.id == el.team_leader).first().name, "collaborators": el.collaborators,
-               "finished": el.is_finished, "duration": el.end_date - el.start_date, "t_l_id":
-                   el.team_leader}
+               "finished": el.is_finished, "duration": el.end_date - el.start_date,
+               "t_l_id": el.team_leader}
 
         param["jobs"].append(job)
 
@@ -128,6 +129,7 @@ def reqister():
             surname=form.surname.data,
             name=form.name.data,
             position=form.position.data,
+            age=form.age.data,
             speciality=form.speciality.data,
             address=form.address.data,
             email=form.email.data,
@@ -193,13 +195,16 @@ def add_jobs():
 
 @app.route('/jobs/<int:id>', methods=['GET', 'POST'])
 @login_required
-def edit_news(id):
+def edit_jobs(id):
     form = JobsForm()
     if request.method == "GET":
         db_sess = db_session.create_session()
-        jobs = db_sess.query(Jobs).filter(Jobs.id == id,
-                                          Jobs.team_leader == current_user.id
-                                          ).first()
+        if current_user.id == 1:
+            jobs = db_sess.query(Jobs).filter(Jobs.id == id).first()
+        else:
+            jobs = db_sess.query(Jobs).filter(Jobs.id == id,
+                                              current_user.id == Jobs.team_leader
+                                              ).first()
         if jobs:
             form.job.data = jobs.job
             form.work_size.data = jobs.work_size
@@ -211,9 +216,12 @@ def edit_news(id):
             abort(404)
     if form.validate_on_submit():
         db_sess = db_session.create_session()
-        job = db_sess.query(Jobs).filter(Jobs.id == id,
-                                         Jobs.team_leader == current_user.id
-                                         ).first()
+        if current_user.id == 1:
+            job = db_sess.query(Jobs).filter(Jobs.id == id).first()
+        else:
+            job = db_sess.query(Jobs).filter(Jobs.id == id,
+                                             current_user.id == Jobs.team_leader
+                                             ).first()
         if job:
             job.job = form.job.data
             job.work_size = form.work_size.data
@@ -233,11 +241,15 @@ def edit_news(id):
 
 @app.route('/jobs_delete/<int:id>', methods=['GET', 'POST'])
 @login_required
-def news_delete(id):
+def jobs_delete(id):
     db_sess = db_session.create_session()
-    job = db_sess.query(Jobs).filter(Jobs.id == id,
-                                     Jobs.team_leader == current_user.id
-                                     ).first()
+
+    if current_user.id == 1:
+        job = db_sess.query(Jobs).filter(Jobs.id == id).first()
+    else:
+        job = db_sess.query(Jobs).filter(Jobs.id == id,
+                                         current_user.id == Jobs.team_leader
+                                         ).first()
     if job:
         db_sess.delete(job)
         db_sess.commit()
