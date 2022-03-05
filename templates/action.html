@@ -25,6 +25,16 @@
             {% endif %}
         </tr>
     </table>
+    {% if current_user.is_authenticated and current_user["id"] == action["t_l_id"] %}
+    <div>
+        <a href="/jobs/{{ action['id'] }}" class="btn btn-warning">
+            Изменить
+        </a>
+        <a href="/jobs_delete/{{ action['id'] }}" class="btn btn-danger">
+            Удалить
+        </a>
+    </div>
+    {% endif %}
     {% endfor %}
 </ul>
 {% endblock %}
