@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<ul>
+    {% if current_user.is_authenticated %}
+    <div>
+        <a href="/" class="btn btn-info">
+            Работы
+        </a>
+    </div>
+    {% endif %}
+    <h1>Departments</h1>
+    {% for action in departments %}
+    <h2>Department # {{ action["id"] }}</h2>
+    <table>
+        <tr>
+            <th style="background-color:Gainsboro">Title</th>
+            <th style="background-color:Gainsboro">Chief</th>
+            <th style="background-color:Gainsboro">Members</th>
+            <th style="background-color:Gainsboro">Email</th>
+        </tr>
+        <tr>
+            <td style="background-color:GreenYellow">{{ action["title"] }}</td>
+            <td style="background-color:GreenYellow">{{ action["chief"] }}</td>
+            <td style="background-color:GreenYellow">{{ action["members"] }}</td>
+            <td style="background-color:GreenYellow">{{ action["email"] }}</td>
+        </tr>
+    </table>
+    {% if current_user.is_authenticated and (current_user["id"] == action["t_l_id"] or current_user["id"] == 1) %}
+    <div>
+        <a href="/department_add/{{ action['id'] }}" class="btn btn-warning">
+            Изменить
+        </a>
+        <a href="/department_delete/{{ action['id'] }}" class="btn btn-danger">
+            Удалить
+        </a>
+    </div>
+    {% endif %}
+    {% endfor %}
+</ul>
+{% endblock %}

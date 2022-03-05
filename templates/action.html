@@ -2,6 +2,13 @@
 
 {% block content %}
 <ul>
+    {% if current_user.is_authenticated %}
+    <div>
+        <a href="/departments" class="btn btn-info">
+            Департаменты
+        </a>
+    </div>
+    {% endif %}
     <h1>Works log</h1>
     {% for action in jobs %}
     <h2>Action {{ action["id"] }}</h2>
