@@ -2,8 +2,8 @@ import os
 import datetime
 from data import db_session, api
 from werkzeug.exceptions import abort
-from data import db_session
 from data.users import User
+from data.category import Category
 from data.jobs import Jobs
 from data.departments import Department
 from flask import Flask, request
@@ -33,6 +33,8 @@ def main():
 
     db_session.global_init("db/mars_explorer.db")
     if a:
+        db_sess = db_session.create_session()
+
         user0 = User()
         user0.surname = 'Scott'
         user0.name = 'Ridley'
@@ -41,7 +43,6 @@ def main():
         user0.speciality = 'research engineer'
         user0.address = 'module_1'
         user0.email = 'scott_chief@mars.org'
-        db_sess = db_session.create_session()
         db_sess.add(user0)
         db_sess.commit()
 
@@ -53,7 +54,6 @@ def main():
         user1.speciality = 'war criminal'
         user1.address = 'module_1'
         user1.email = 'floppa@mars.org'
-        db_sess = db_session.create_session()
         db_sess.add(user1)
         db_sess.commit()
 
@@ -65,7 +65,6 @@ def main():
         user2.speciality = 'programmer'
         user2.address = 'boloto'
         user2.email = 'CyberZhaba@mars.frog'
-        db_sess = db_session.create_session()
         db_sess.add(user2)
         db_sess.commit()
 
@@ -77,30 +76,36 @@ def main():
         user3.speciality = 'dungeon master'
         user3.address = 'gym'
         user3.email = 'van@gachi.org'
-        db_sess = db_session.create_session()
         db_sess.add(user3)
+        db_sess.commit()
+
+        category0 = Category()
+        category0.name = 'Bebra'
+        category1 = Category()
+        category1.name = 'Bebra1'
+        db_sess.add(category0)
+        db_sess.commit()
+        db_sess.add(category1)
         db_sess.commit()
 
         job0 = Jobs(team_leader=1, job='deployment of residential modules 1 and 2', work_size=15,
                     collaborators='2, 3', start_date=datetime.date(2022, 1, 23), is_finished=False,
                     end_date=datetime.date(2022, 1, 24))
-        db_sess = db_session.create_session()
-        db_sess.add(job0)
+        job0.categories.append(category0)
+        job0.categories.append(category1)
         db_sess.commit()
 
         job1 = Jobs(team_leader=4, job='building gym', work_size=10,
                     collaborators='4', start_date=datetime.date(2022, 2, 27), is_finished=True,
                     end_date=datetime.datetime.now())
-        db_sess = db_session.create_session()
+        job1.categories.append(category1)
         db_sess.add(job1)
         db_sess.commit()
 
         dep = Department(title='A', chief=1, members='1, 2, 3', email='a@a.com')
-        db_sess = db_session.create_session()
         db_sess.add(dep)
         db_sess.commit()
         dep = Department(title='B', chief=1, members='1, 2, 3', email='b@b.com')
-        db_sess = db_session.create_session()
         db_sess.add(dep)
         db_sess.commit()
 
@@ -117,7 +122,8 @@ def index():
             User.id == el.team_leader).first().surname + ' ' + db_sess.query(User).filter(
             User.id == el.team_leader).first().name, "collaborators": el.collaborators,
                "finished": el.is_finished, "duration": el.end_date - el.start_date,
-               "t_l_id": el.team_leader}
+               "t_l_id": el.team_leader,
+               "category": ', '.join(list(map(lambda x: x.name, el.categories)))}
 
         param["jobs"].append(job)
 
@@ -204,7 +210,7 @@ def add_jobs():
 @login_required
 def edit_jobs(id):
     form = JobsForm()
-    if api.method == "GET":
+    if request.method == "GET":
         db_sess = db_session.create_session()
         if current_user.id == 1:
             jobs = db_sess.query(Jobs).filter(Jobs.id == id).first()
@@ -304,7 +310,7 @@ def add_department():
 @login_required
 def edit_departments(id):
     form = DepartmentForm()
-    if api.method == "GET":
+    if request.method == "GET":
         db_sess = db_session.create_session()
         if current_user.id == 1:
             dep = db_sess.query(Department).filter(Department.id == id).first()

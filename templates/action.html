@@ -18,6 +18,7 @@
             <th style="background-color:Gainsboro">Team leader</th>
             <th style="background-color:Gainsboro">Duration</th>
             <th style="background-color:Gainsboro">List of collaborators</th>
+            <th style="background-color:Gainsboro">Hazard</th>
             <th style="background-color:Gainsboro">is finished</th>
         </tr>
         <tr>
@@ -25,6 +26,7 @@
             <td style="background-color:GreenYellow">{{ action["team_leader"] }}</td>
             <td style="background-color:GreenYellow">{{ action["duration"] }}</td>
             <td style="background-color:GreenYellow">{{ action["collaborators"] }}</td>
+            <td style="background-color:GreenYellow">{{ action["category"] }}</td>
             {% if action["finished"] == True %}
             <td style="background-color:Lime">finished</td>
             {% else %}
