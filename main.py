@@ -1,6 +1,6 @@
 import os
 import datetime
-
+from data import db_session, api
 from werkzeug.exceptions import abort
 from data import db_session
 from data.users import User
@@ -104,6 +104,7 @@ def main():
         db_sess.add(dep)
         db_sess.commit()
 
+    app.register_blueprint(api.blueprint)
     app.run()
 
 
@@ -203,7 +204,7 @@ def add_jobs():
 @login_required
 def edit_jobs(id):
     form = JobsForm()
-    if request.method == "GET":
+    if api.method == "GET":
         db_sess = db_session.create_session()
         if current_user.id == 1:
             jobs = db_sess.query(Jobs).filter(Jobs.id == id).first()
@@ -303,7 +304,7 @@ def add_department():
 @login_required
 def edit_departments(id):
     form = DepartmentForm()
-    if request.method == "GET":
+    if api.method == "GET":
         db_sess = db_session.create_session()
         if current_user.id == 1:
             dep = db_sess.query(Department).filter(Department.id == id).first()
