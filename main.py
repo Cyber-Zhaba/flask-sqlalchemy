@@ -1,7 +1,8 @@
 import os
 import datetime
-from data import db_session, api
+from data import db_session, jobs_api, users_api
 from werkzeug.exceptions import abort
+from requests import get
 from data.users import User
 from data.category import Category
 from data.jobs import Jobs
@@ -14,6 +15,9 @@ from forms.job import JobsForm
 from forms.department import DepartmentForm
 from flask_login import LoginManager, login_required
 from flask_login import login_user, logout_user, current_user
+import requests
+from io import BytesIO
+from PIL import Image
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -23,8 +27,8 @@ login_manager.init_app(app)
 
 
 def main():
-    f = False
-    a = False
+    f = True
+    a = True
     if f:
         try:
             os.remove('db/mars_explorer.db')
@@ -43,6 +47,7 @@ def main():
         user0.speciality = 'research engineer'
         user0.address = 'module_1'
         user0.email = 'scott_chief@mars.org'
+        user0.city_from = 'New York'
         db_sess.add(user0)
         db_sess.commit()
 
@@ -54,6 +59,7 @@ def main():
         user1.speciality = 'war criminal'
         user1.address = 'module_1'
         user1.email = 'floppa@mars.org'
+        user1.city_from = 'Bebra'
         db_sess.add(user1)
         db_sess.commit()
 
@@ -65,6 +71,7 @@ def main():
         user2.speciality = 'programmer'
         user2.address = 'boloto'
         user2.email = 'CyberZhaba@mars.frog'
+        user2.city_from = 'Batkovskoe Boloto'
         db_sess.add(user2)
         db_sess.commit()
 
@@ -76,6 +83,7 @@ def main():
         user3.speciality = 'dungeon master'
         user3.address = 'gym'
         user3.email = 'van@gachi.org'
+        user3.city_from = 'Нигер'
         db_sess.add(user3)
         db_sess.commit()
 
@@ -109,7 +117,8 @@ def main():
         db_sess.add(dep)
         db_sess.commit()
 
-    app.register_blueprint(api.blueprint)
+    app.register_blueprint(jobs_api.blueprint)
+    app.register_blueprint(users_api.blueprint)
     app.run()
 
 
@@ -364,6 +373,51 @@ def department_delete(id):
     else:
         abort(404)
     return redirect('/departments')
+
+
+n = 0
+
+
+@app.route('/users_show/<int:user_id>', methods=['GET'])
+def nostalgia(user_id):
+    global n
+    user = get(f'http://localhost:5000/api/users/{user_id}').json()['users']
+
+    toponym_to_find = user['city_from']
+    geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
+    geocoder_params = {
+        "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
+        "geocode": toponym_to_find,
+        "format": "json"}
+    response = requests.get(geocoder_api_server, params=geocoder_params)
+    json_response = response.json()
+    toponym = json_response["response"]["GeoObjectCollection"][
+        "featureMember"][0]["GeoObject"]
+    toponym_coodrinates = toponym["Point"]["pos"]
+    toponym_longitude, toponym_lattitude = toponym_coodrinates.split(" ")
+    delta = "0.07"
+    map_params = {
+        "ll": ",".join([toponym_longitude, toponym_lattitude]),
+        "spn": ",".join([delta, delta]),
+        "l": "sat"
+    }
+    map_api_server = "http://static-maps.yandex.ru/1.x/"
+    response = requests.get(map_api_server, params=map_params)
+    pic = Image.open(BytesIO(response.content))
+    name = user['city_from'].replace(' ', '_')
+    pic.save(f'static/img/{name}.png')
+
+    file_r = ['{% extends "base.html" %}\n', '\n', '{% block content %}\n',
+              '<ul>\n', '    <h1>Nostalgia</h1>\n',
+              '    <h3>{{ user["surname"] }} {{ user["name"] }}</h3>\n',
+              '    <h5>{{ user["city_from"] }}</h5>\n', '</ul>\n', '{% endblock %}']
+
+    file_r.insert(7,
+                  f'''    <img src="{chr(123) + chr(123)} url_for('static', filename='img/{name}.png') {chr(125) + chr(125)}">\n''')
+    file = open(f'templates/nostalgia{n}.html', 'w').write(''.join(file_r))
+
+    n += 1
+    return render_template(f'nostalgia{n - 1}.html', user=user)
 
 
 if __name__ == '__main__':

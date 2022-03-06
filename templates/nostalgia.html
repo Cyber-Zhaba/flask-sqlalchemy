@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<ul>
+    <h1>Nostalgia</h1>
+    <h3>{{ user["surname"] }} {{ user["name"] }}</h3>
+    <h5>{{ user["city_from"] }}</h5>
+    <img src="{{ url_for('static', filename='img/Bebra.png') }}">
+</ul>
+{% endblock %}
