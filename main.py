@@ -1,11 +1,13 @@
 import os
 import datetime
 from data import db_session, jobs_api, users_api
+from flask_restful import reqparse, abort, Api, Resource
 from werkzeug.exceptions import abort
 from requests import get
 from data.users import User
 from data.category import Category
 from data.jobs import Jobs
+from data import users_resource
 from data.departments import Department
 from flask import Flask, request
 from flask import render_template, redirect
@@ -21,6 +23,7 @@ from PIL import Image
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
+api = Api(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -119,6 +122,9 @@ def main():
 
     app.register_blueprint(jobs_api.blueprint)
     app.register_blueprint(users_api.blueprint)
+
+    api.add_resource(users_resource.UsersListResource, '/api/v2/users')
+    api.add_resource(users_resource.UsersResource, '/api/v2/users/<int:user_id>')
     app.run()
 
 
