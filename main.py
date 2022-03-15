@@ -8,6 +8,7 @@ from data.users import User
 from data.category import Category
 from data.jobs import Jobs
 from data import users_resource
+from data import jobs_resource
 from data.departments import Department
 from flask import Flask, request
 from flask import render_template, redirect
@@ -125,6 +126,9 @@ def main():
 
     api.add_resource(users_resource.UsersListResource, '/api/v2/users')
     api.add_resource(users_resource.UsersResource, '/api/v2/users/<int:user_id>')
+
+    api.add_resource(jobs_resource.JobsListResource, '/api/v2/jobs')
+    api.add_resource(jobs_resource.JobsResource, '/api/v2/jobs/<int:job_id>')
     app.run()
 
 

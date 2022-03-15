@@ -1,5 +1,5 @@
-from flask_restful import Resource, reqparse
-from flask import jsonify, abort
+from flask_restful import Resource, reqparse, abort
+from flask import jsonify
 from . import db_session
 from .users import User
 
